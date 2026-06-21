@@ -1860,6 +1860,35 @@
         color: rgba(255, 255, 255, 0.22);
         white-space: nowrap;
       }
+      .lm-tabs {
+        display: flex;
+        border: 1px solid var(--border);
+        margin-bottom: 1.8rem;
+      }
+      .lm-tab {
+        flex: 1;
+        background: none;
+        border: none;
+        color: rgba(255, 255, 255, 0.35);
+        font-family: var(--fb);
+        font-size: 0.62rem;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        padding: 11px 0;
+        cursor: pointer;
+        transition: background 0.2s, color 0.2s;
+      }
+      .lm-tab + .lm-tab {
+        border-left: 1px solid var(--border);
+      }
+      .lm-tab.active {
+        background: var(--pink);
+        color: #000;
+      }
+      .lm-tab:not(.active):hover {
+        color: var(--white);
+      }
       #loginForm {
         display: flex;
         flex-direction: column;
@@ -3032,8 +3061,14 @@
         </button>
 
         <div class="lm-eye">Member Access</div>
-        <h2 class="lm-h">Welcome back<span style="color: var(--pink)">.</span></h2>
-        <p class="lm-sub">
+
+        <div class="lm-tabs">
+          <button type="button" class="lm-tab active" id="tabSignin">Sign In</button>
+          <button type="button" class="lm-tab" id="tabSignup">Create Account</button>
+        </div>
+
+        <h2 class="lm-h"><span id="lmHeadingText">Welcome back</span><span style="color: var(--pink)">.</span></h2>
+        <p class="lm-sub" id="lmSub">
           Sign in to access the collective — drops, collabs, and conversation.
         </p>
 
@@ -3057,7 +3092,7 @@
           </button>
         </div>
 
-        <div class="lm-divider"><span>Or sign in with email</span></div>
+        <div class="lm-divider"><span id="lmDividerText">Or sign in with email</span></div>
 
         <form id="loginForm" onsubmit="doLogin(event)">
           <div class="fg">
@@ -3094,7 +3129,7 @@
             </div>
           </div>
 
-          <div class="lm-row">
+          <div class="lm-row" id="lmRow">
             <label class="lm-remember">
               <input type="checkbox" name="remember" /> Remember me
             </label>
@@ -3107,7 +3142,7 @@
             id="loginBtn"
             style="border: none; width: 100%; text-align: center"
           >
-            Sign In
+            <span id="loginBtnText">Sign In</span>
           </button>
 
           <div id="lOk" class="lm-msg">✓ &nbsp;Signed in! Redirecting…</div>
@@ -3116,9 +3151,9 @@
           </div>
         </form>
 
-        <p class="lm-foot">
+        <p class="lm-foot" id="lmFoot">
           New to VXN?
-          <a href="https://discord.gg/tEpdszFFh9" target="_blank">Join the collective</a>
+          <a href="#" id="lmToggleLink">Create an account</a>
         </p>
       </div>
     </div>
@@ -3520,6 +3555,39 @@
         if (e.key === "Escape" && loginOverlay.classList.contains("show")) closeLogin();
       });
 
+      /* SIGN IN / CREATE ACCOUNT MODE SWITCH */
+      let authMode = "signin";
+      function setAuthMode(mode) {
+        authMode = mode;
+        const isSignup = mode === "signup";
+        document.getElementById("tabSignin").classList.toggle("active", !isSignup);
+        document.getElementById("tabSignup").classList.toggle("active", isSignup);
+        document.getElementById("lmHeadingText").textContent = isSignup ? "Join VXN" : "Welcome back";
+        document.getElementById("lmSub").textContent = isSignup
+          ? "Create an account to access the collective — drops, collabs, and conversation."
+          : "Sign in to access the collective — drops, collabs, and conversation.";
+        document.getElementById("lmDividerText").textContent = isSignup
+          ? "Or sign up with email"
+          : "Or sign in with email";
+        document.getElementById("lmRow").style.display = isSignup ? "none" : "flex";
+        document.getElementById("loginBtnText").textContent = isSignup ? "Create Account" : "Sign In";
+        document.getElementById("lmFoot").innerHTML = isSignup
+          ? 'Already have an account? <a href="#" id="lmToggleLink">Sign in</a>'
+          : 'New to VXN? <a href="#" id="lmToggleLink">Create an account</a>';
+        document.getElementById("lmToggleLink").addEventListener("click", (e) => {
+          e.preventDefault();
+          setAuthMode(isSignup ? "signin" : "signup");
+        });
+        document.getElementById("lOk").style.display = "none";
+        document.getElementById("lErr").style.display = "none";
+      }
+      document.getElementById("tabSignin").addEventListener("click", () => setAuthMode("signin"));
+      document.getElementById("tabSignup").addEventListener("click", () => setAuthMode("signup"));
+      document.getElementById("lmToggleLink").addEventListener("click", (e) => {
+        e.preventDefault();
+        setAuthMode("signup");
+      });
+
       /* PASSWORD VISIBILITY TOGGLE */
       const pwInput = document.getElementById("pwInput"),
         pwToggle = document.getElementById("pwToggle");
@@ -3539,7 +3607,7 @@
 
     <!-- ── FIREBASE AUTH ── -->
     <script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
       import {
         getAuth,
         signInWithEmailAndPassword,
@@ -3548,7 +3616,7 @@
         signInWithPopup,
         onAuthStateChanged,
         signOut
-      } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+      } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
       const firebaseConfig = {
         apiKey: "AIzaSyDGl93GcR018GnTRtEdLom6J6soOBbeDi4",
@@ -3567,13 +3635,31 @@
 
         const email = document.getElementById("emailInput").value;
         const password = document.getElementById("pwInput").value;
+        const okEl = document.getElementById("lOk");
+        const errEl = document.getElementById("lErr");
+        const btnText = document.getElementById("loginBtnText");
+        const isSignup = typeof authMode !== "undefined" && authMode === "signup";
+
+        okEl.style.display = "none";
+        errEl.style.display = "none";
+        const originalLabel = btnText.textContent;
+        btnText.textContent = isSignup ? "Creating account..." : "Signing in...";
 
         try {
-          await signInWithEmailAndPassword(auth, email, password);
-          alert("Welcome to VXN");
-          closeLogin();
+          if (isSignup) {
+            await createUserWithEmailAndPassword(auth, email, password);
+            okEl.textContent = "✓  Account created! Redirecting…";
+          } else {
+            await signInWithEmailAndPassword(auth, email, password);
+            okEl.textContent = "✓  Signed in! Redirecting…";
+          }
+          okEl.style.display = "block";
+          setTimeout(closeLogin, 1200);
         } catch (err) {
-          alert(err.message);
+          errEl.textContent = "✕  " + err.message;
+          errEl.style.display = "block";
+        } finally {
+          btnText.textContent = originalLabel;
         }
       };
 
