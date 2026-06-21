@@ -329,6 +329,142 @@
         background: var(--white);
       }
 
+      /* ── USER MENU (logged-in state) ── */
+      .user-chip {
+        display: none;
+        position: relative;
+        align-items: center;
+      }
+      .user-chip.show {
+        display: flex;
+      }
+      .user-pfp-btn {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        border: 1px solid var(--border);
+        background: var(--gray);
+        padding: 0;
+        cursor: pointer;
+        overflow: hidden;
+        display: grid;
+        place-items: center;
+        transition: border-color 0.2s;
+      }
+      .user-pfp-btn:hover {
+        border-color: var(--pink);
+      }
+      .user-pfp-btn img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+      .user-dd {
+        position: absolute;
+        top: calc(100% + 10px);
+        right: 0;
+        min-width: 200px;
+        background: var(--gray);
+        border: 1px solid var(--border);
+        opacity: 0;
+        transform: translateY(-6px);
+        pointer-events: none;
+        transition: opacity 0.2s, transform 0.2s;
+        z-index: 10;
+      }
+      .user-dd.open {
+        opacity: 1;
+        transform: none;
+        pointer-events: auto;
+      }
+      .user-dd-name {
+        padding: 0.9rem 1rem 0.6rem;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--white);
+        border-bottom: 1px solid var(--border);
+        word-break: break-word;
+      }
+      .user-dd-email {
+        padding: 0 1rem 0.8rem;
+        font-size: 0.66rem;
+        color: rgba(255, 255, 255, 0.3);
+        border-bottom: 1px solid var(--border);
+        word-break: break-word;
+      }
+      .user-dd button {
+        width: 100%;
+        background: none;
+        border: none;
+        text-align: left;
+        padding: 0.8rem 1rem;
+        font-family: var(--fb);
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.45);
+        cursor: pointer;
+        transition: color 0.2s, background 0.2s;
+      }
+      .user-dd button:hover {
+        color: var(--pink);
+        background: rgba(244, 167, 185, 0.06);
+      }
+
+      /* mobile user chip */
+      .mnav-user {
+        display: none;
+        align-items: center;
+        gap: 0.9rem;
+        margin-top: 2.5rem;
+        padding: 0.9rem 1rem;
+        border: 1px solid var(--border);
+        width: 100%;
+      }
+      .mnav-user.show {
+        display: flex;
+      }
+      .mnav-user img {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        flex-shrink: 0;
+      }
+      .mnav-user-info {
+        flex: 1;
+        min-width: 0;
+      }
+      .mnav-user-name {
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: var(--white);
+      }
+      .mnav-user-email {
+        font-size: 0.6rem;
+        color: rgba(255, 255, 255, 0.3);
+        margin-top: 2px;
+        word-break: break-word;
+      }
+      .mnav-user button {
+        background: none;
+        border: 1px solid var(--border);
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 0.58rem;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        padding: 6px 10px;
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: border-color 0.2s, color 0.2s;
+      }
+      .mnav-user button:hover {
+        border-color: var(--pink);
+        color: var(--pink);
+      }
+
       /* ── MOBILE NAV ── */
       .mnav {
         display: none;
@@ -402,6 +538,10 @@
         text-transform: uppercase;
         text-decoration: none;
         transition: border-color 0.2s, color 0.2s;
+      }
+      .mnav-cta-ghost.hide,
+      .nav-cta-ghost.hide {
+        display: none !important;
       }
       .mnav-cta-ghost:hover {
         border-color: var(--pink);
@@ -2178,10 +2318,25 @@
         </ul>
         <div class="nav-r">
           <div class="nav-dot"><span class="ndot"></span>Active</div>
-          <a href="#" class="nav-cta-ghost login-trigger"
+
+          <a href="#" class="nav-cta-ghost login-trigger" id="navLoginBtn"
             ><i class="fa-solid fa-user" style="font-size: 0.65rem"></i>
-            Sign In</a
+            Sign Up / Log In</a
           >
+
+          <div class="user-chip" id="userChip">
+            <button class="user-pfp-btn" id="userPfpBtn" aria-label="Account menu">
+              <img id="userPfpImg" src="" alt="Account" />
+            </button>
+            <div class="user-dd" id="userDd">
+              <div class="user-dd-name" id="userDdName">—</div>
+              <div class="user-dd-email" id="userDdEmail">—</div>
+              <button type="button" id="userSignOutBtn">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i>&nbsp; Log Out
+              </button>
+            </div>
+          </div>
+
           <a
             href="https://discord.gg/tEpdszFFh9"
             target="_blank"
@@ -2222,9 +2377,19 @@
       <a href="https://discord.gg/tEpdszFFh9" target="_blank" class="mnav-cta"
         ><i class="fab fa-discord"></i> Join the Collective</a
       >
-      <a href="#" class="mnav-cta-ghost login-trigger"
-        ><i class="fa-solid fa-user"></i> Sign In</a
+
+      <a href="#" class="mnav-cta-ghost login-trigger" id="mnavLoginBtn"
+        ><i class="fa-solid fa-user"></i> Sign Up / Log In</a
       >
+
+      <div class="mnav-user" id="mnavUser">
+        <img id="mnavUserImg" src="" alt="Account" />
+        <div class="mnav-user-info">
+          <div class="mnav-user-name" id="mnavUserName">—</div>
+          <div class="mnav-user-email" id="mnavUserEmail">—</div>
+        </div>
+        <button type="button" id="mnavSignOutBtn">Log Out</button>
+      </div>
     </div>
 
     <!-- ── HERO ── -->
@@ -3600,6 +3765,19 @@
         pwToggle.setAttribute("aria-label", show ? "Hide password" : "Show password");
       });
 
+      /* USER MENU DROPDOWN (desktop pfp chip) */
+      const userPfpBtn = document.getElementById("userPfpBtn");
+      const userDd = document.getElementById("userDd");
+      userPfpBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        userDd.classList.toggle("open");
+      });
+      document.addEventListener("click", (e) => {
+        if (!userDd.contains(e.target) && e.target !== userPfpBtn) {
+          userDd.classList.remove("open");
+        }
+      });
+
       /* GOOGLE SSO BUTTON — real handler wired via Firebase, see module script below */
 
       /* LOGIN SUBMIT — real handler wired via Firebase, see module script below */
@@ -3673,10 +3851,57 @@
         }
       });
 
+      /* ── AUTH STATE → SWAP NAV UI ── */
+      const navLoginBtn = document.getElementById("navLoginBtn");
+      const mnavLoginBtn = document.getElementById("mnavLoginBtn");
+      const userChip = document.getElementById("userChip");
+      const userPfpImg = document.getElementById("userPfpImg");
+      const userDdName = document.getElementById("userDdName");
+      const userDdEmail = document.getElementById("userDdEmail");
+      const mnavUser = document.getElementById("mnavUser");
+      const mnavUserImg = document.getElementById("mnavUserImg");
+      const mnavUserName = document.getElementById("mnavUserName");
+      const mnavUserEmail = document.getElementById("mnavUserEmail");
+
+      function fallbackAvatar(name, email) {
+        const label = encodeURIComponent(name || email || "VXN");
+        return `https://ui-avatars.com/api/?name=${label}&background=f4a7b9&color=000`;
+      }
+
       onAuthStateChanged(auth, (user) => {
         if (user) {
-          console.log("Logged in:", user.email);
+          const photo = user.photoURL || fallbackAvatar(user.displayName, user.email);
+          const name = user.displayName || (user.email ? user.email.split("@")[0] : "Member");
+
+          // desktop
+          navLoginBtn.classList.add("hide");
+          userChip.classList.add("show");
+          userPfpImg.src = photo;
+          userDdName.textContent = name;
+          userDdEmail.textContent = user.email || "";
+
+          // mobile
+          mnavLoginBtn.classList.add("hide");
+          mnavUser.classList.add("show");
+          mnavUserImg.src = photo;
+          mnavUserName.textContent = name;
+          mnavUserEmail.textContent = user.email || "";
+        } else {
+          navLoginBtn.classList.remove("hide");
+          userChip.classList.remove("show");
+          document.getElementById("userDd").classList.remove("open");
+
+          mnavLoginBtn.classList.remove("hide");
+          mnavUser.classList.remove("show");
         }
+      });
+
+      document.getElementById("userSignOutBtn").addEventListener("click", async () => {
+        await signOut(auth);
+      });
+      document.getElementById("mnavSignOutBtn").addEventListener("click", async () => {
+        await signOut(auth);
+        document.getElementById("mnav").classList.remove("open");
       });
     </script>
   </body>
